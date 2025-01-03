@@ -30,8 +30,7 @@ def get_tour():
 
     items_total = []
 
-    for page in range(1, (total_counts//100+2)):
-        print(page)
+    for page in range(1, (total_counts//200+2)):
         params = {
             "numOfRows": 200,
             "pageNo": page,
@@ -46,7 +45,6 @@ def get_tour():
         items_total.extend(items)
         time.sleep(2)
 
-    print(items_total)
     filtered_data = [
         {
             'spot_id': item['contentid'],
@@ -69,4 +67,4 @@ def get_tour():
         for item in items_total
     ]
     df = pd.DataFrame(filtered_data)
-    df.to_csv("D:/dev/Plan4Land/Plan4Land_Back/tour.csv", index=False)
+    df.to_csv("D:/dev/Plan4Land/Plan4Land_API/tour.csv", index=False)
