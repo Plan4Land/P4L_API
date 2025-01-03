@@ -8,6 +8,7 @@ def get_tour():
     MobileOs = "ETC"
     MobileApp = "Plan4Land"
     dataType = "json"
+    ## serviceKey는 각자 Decode Key 사용해주세요.. 하루 요청량이 정해져있어요ㅠㅠ
     serviceKey = "IgykVu0qTZbi+3YtfC645Gag515ri7KsHHpE3r6Ef3iTiNaSDdmKZJizindrVRYzN4DEDknnAjoziHs/KDj/6g=="
     params = {
         "MobileOS": MobileOs,
