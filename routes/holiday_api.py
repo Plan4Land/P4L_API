@@ -13,7 +13,7 @@ def get_holiday():
     year = datetime.now().strftime("%Y")
     serviceKey = "2hAlR4x+io6b+4PdHgQASiIx+PVniZdTxHNFzmtJ0bWUQaqyIWka7e/y6Ksl/HxqrzujRUGgBf8o2H+Dfn1dBg=="
     pageNo = 1
-    numOfRows = 100
+    numOfRows = 10
 
     url = "http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getHoliDeInfo"
     params = {
