@@ -1,7 +1,10 @@
 from flask import Flask
 from flask_cors import CORS
+from apscheduler.schedulers.background import BackgroundScheduler
+#  pip install apscheduler
+import atexit
 
-from routes.payment_insert import new_membership
+from routes.payment import new_membership
 from routes.tour_api import get_tour
 from routes.holiday_api import get_holiday
 

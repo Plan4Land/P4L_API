@@ -25,6 +25,10 @@ INSERT INTO PAY_RECORD (RECORD_ID, PAY_TIME, PAY_TYPE, MEMBER_ID, MEMBERSHIP_ID)
 VALUES (%s, %s, %s, %s, %s)
 """
 
+PAY_LIST_QUERY ="""
+SELECT * FROM MEMBERSHIP WHERE DATE(PAYMENT_DATE) = %s
+"""
+
 
 def convert_datetime(iso_string, to_timezone):
     utc = pytz.utc
@@ -32,6 +36,13 @@ def convert_datetime(iso_string, to_timezone):
     dt = datetime.fromisoformat(iso_string.replace('Z', '+00:00'))
     dt_utc = dt.astimezone(utc)
     return dt_utc.astimezone(target_tz).strftime('%Y-%m-%d %H:%M:%S')
+
+
+def get_current_day(timezone='Asia/Seoul'):  # 오늘 날짜를 UTC로 가져오기
+    now_utc = datetime.now(pytz.utc)  # 지정된 시간대로 변환
+    target_timezone = pytz.timezone(timezone)
+    now_target = now_utc.astimezone(target_timezone)
+    return now_target.strftime('%Y-%m-%d')
 
 
 def get_uid(user_id):
@@ -75,7 +86,7 @@ def new_membership():
 
 
 def insert_record(cursor, json_data, membership_pk):
-    #data = request.json
+    # data = request.json
     data = json_data
     record_id = data['payId']
     pay_time = convert_datetime(data['payTime'], 'Asia/Seoul')
@@ -89,3 +100,15 @@ def insert_record(cursor, json_data, membership_pk):
         print(f'Record Insert Error : {e}')
         raise
 
+
+def get_payment_list():
+    today = get_current_day()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(PAY_LIST_QUERY, (today,))
+            result = cursor.fetchall()
+            return result
+    except Exception as e:
+        print(e)
+        print('Payment List Rejected')
+        return ''
