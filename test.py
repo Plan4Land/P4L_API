@@ -4,6 +4,11 @@ import pymysql
 
 data_raw = pd.read_csv("tour.csv")
 data = data_raw.dropna(subset=['sigungu_code']) ## 시군구코드 없는애들 그냥 뺐어요
+data = data[data['sigungu_code'] != 99]
+data.loc[data['type_id'].isin([12, 14, 25, 28, 38]), 'type_id'] = 100
+data.loc[data['type_id'] == 32, 'type_id'] = 200
+data.loc[data['type_id'] == 39, 'type_id'] = 300
+data = data[data['type_id'] != 15]
 df = data.fillna('')
 
 # MySQL 연결
@@ -16,6 +21,10 @@ conn = pymysql.connect(
 )
 
 cursor = conn.cursor()
+delete_query = "DELETE FROM Travel_Spot"
+
+cursor.execute(delete_query)
+conn.commit()
 
 # 데이터 삽입 쿼리
 insert_query = """
