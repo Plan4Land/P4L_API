@@ -1,10 +1,14 @@
+import os
+
 from flask import Flask, request, jsonify
+from dotenv import load_dotenv
 import requests
 import json
-
 app = Flask(__name__)
 
-PORTONE_API_SECRET = ''
+load_dotenv()
+
+PORTONE_API_SECRET = os.getenv('PORT_ONE_KEY')
 UNIQUE_PAYMENT_ID = 'your_unique_payment_id'
 BILLING_KEY_HERE = ''
 CUSTOMER_ID_HERE = 'your_customer_id'
@@ -25,14 +29,14 @@ def schedule_payment():
             "orderName": "PLAN4LAND 멤버십 정기결제",
             "customer": {
                 "id": CUSTOMER_ID_HERE,
-                # 고객 정보가 필요한 경우 API 명세에 따라 추가해주세요.
+                # 고객 정보가 필요한 경우 API 명세에 따라 추가 해 주세요.
             },
             "amount": {
                 "total": 1,
             },
             "currency": "KRW",
         },
-        "timeToPay": "2023-08-24T14:15:22Z"  # 결제를 시도할 시각
+        "timeToPay": "2025-01-10T14:00:00Z"  # 결제를 시도할 시각
     }
 
     response = requests.post(url, headers=headers, data=json.dumps(data))
