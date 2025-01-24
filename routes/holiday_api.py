@@ -1,59 +1,102 @@
-from flask import Flask, request, jsonify
+import pandas as pd
+import pymysql
 import requests
+from datetime import datetime
 
-app = Flask(__name__)
+def fetch_holidays():
+    today = datetime.today()
+    solYear = today.year
+    years = [solYear - 2, solYear - 1, solYear, solYear + 1, solYear + 2]
 
-# 공휴일 데이터를 조회하는 함수
-def get_holiday():
-    # Flask에서 파라미터 추출
-    solYear = request.args.get('solYear')
-    solMonth = request.args.get('solMonth')
-
-    if not solYear or not solMonth:
-        return jsonify({"error": "연도와 월이 필요합니다."}), 400
-
+    holidays = []
     serviceKey = "2hAlR4x+io6b+4PdHgQASiIx+PVniZdTxHNFzmtJ0bWUQaqyIWka7e/y6Ksl/HxqrzujRUGgBf8o2H+Dfn1dBg=="
     url = "http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getHoliDeInfo"
-    params = {
-        'serviceKey': serviceKey,
-        'pageNo': 1,
-        'numOfRows': 50,
-        'solYear': solYear,
-        'solMonth': f"{int(solMonth):02d}",  # 월이 1자리면 0을 붙임
-        '_type': 'json'
-    }
 
-    try:
-        response = requests.get(url, params=params)
-        response.raise_for_status()  # HTTP 에러 발생 시 예외 처리
+    for year in years:
+        params = {
+            'serviceKey': serviceKey,
+            'pageNo': 1,
+            'numOfRows': 50,
+            'solYear': year,
+            '_type': 'json'
+        }
 
-        # 응답이 JSON이 아니거나, 예상한 형식이 아닌 경우 처리
         try:
+            response = requests.get(url, params=params)
+            response.raise_for_status()
+
             data = response.json()
-        except ValueError:
-            return jsonify({"error": "응답 데이터가 올바른 JSON 형식이 아닙니다."}), 500
+            if not data.get('response', {}).get('body', {}).get('items'):
+                continue
 
-        # 데이터가 비어있거나 예상한 형식이 아닌 경우 처리
-        if not data.get('response', {}).get('body', {}).get('items'):
-            return jsonify({"message": "해당 월에 공휴일이 없습니다."}), 200
+            items = data['response']['body']['items']['item']
+            if isinstance(items, dict):
+                items = [items]
 
-        # 공휴일 데이터 추출
-        items = data['response']['body']['items']['item']
-        if isinstance(items, dict):  # 단일 데이터인 경우 리스트로 변환
-            items = [items]
+            holidays.extend([
+                {
+                    "holiday_name": item.get("dateName", ""),
+                    "is_holiday": item.get("isHoliday", ""),
+                    "holiday_date": item.get("locdate", ""),
+                    "sequence": item.get("seq", ""),
+                    "year": year
+                }
+                for item in items
+            ])
 
-        holidays = [
-            {
-                "dateName": item.get("dateName", ""),  # 공휴일 이름
-                "locdate": item.get("locdate", ""),    # 날짜
-                "isHoliday": item.get("isHoliday", ""), # 공휴일 여부
-                "seq": item.get("seq", "")             # 고유 번호
-            }
-            for item in items
-        ]
-        return jsonify(holidays)
+        except requests.exceptions.RequestException as e:
+            print(f"API 요청 실패: {e}")
+            continue
 
-    except requests.exceptions.RequestException as e:
-        return jsonify({"error": f"API 요청 실패: {e}"}), 500
-    except KeyError:
-        return jsonify({"error": "공휴일 데이터가 없습니다."}), 404
+    return holidays
+
+def save_holidays_to_db(holidays):
+    # 데이터프레임 생성
+    df = pd.DataFrame(holidays)
+    df['holiday_date'] = pd.to_datetime(df['holiday_date'], format='%Y%m%d')  # 날짜 형식 변환
+
+    # ID 자동 생성
+    df['holiday_id'] = df.index + 1
+
+    # 컬럼 재정렬
+    df = df[['holiday_id', 'holiday_name', 'is_holiday', 'holiday_date', 'sequence', 'year']]
+
+    # MySQL 연결
+    conn = pymysql.connect(
+        host='localhost',
+        user='plan4plan',
+        password='plan1234',
+        database='plan_4_land_db',
+        charset='utf8mb4'
+    )
+
+    cursor = conn.cursor()
+
+    # 기존 데이터 삭제
+    delete_query = "DELETE FROM Holiday"
+    cursor.execute(delete_query)
+    conn.commit()
+
+    # 데이터 삽입 쿼리
+    insert_query = """
+    INSERT INTO Holiday (holiday_id, holiday_name, is_holiday, holiday_date, seq, year)
+    VALUES (%s, %s, %s, %s, %s, %s)
+    """
+
+    # 데이터 삽입
+    for _, row in df.iterrows():
+        cursor.execute(insert_query, tuple(row))
+
+    # 커밋 및 종료
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    print("공휴일 데이터가 데이터베이스에 저장되었습니다.")
+
+if __name__ == "__main__":
+    holidays = fetch_holidays()
+    if holidays:
+        save_holidays_to_db(holidays)
+    else:
+        print("저장할 공휴일 데이터가 없습니다.")
