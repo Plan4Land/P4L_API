@@ -3,18 +3,11 @@ import pymysql
 ## pip install pymysql
 
 data_raw = pd.read_csv("tour.csv")
-# sigungu_code와 mapx가 없는 행 제거
 data = data_raw.dropna(subset=['sigungu_code', 'mapx'])
-# mapx 값이 0인 행 제거
-data = data[data['mapx'] != 0]
-# sigungu_code가 99인 행 제거
-data = data[data['sigungu_code'] != 99]
-# type_id 값 변경
-#    - [12, 14, 25, 28, 38] → 100
-#    - 32 → 200
-#    - 39 → 300
-data['type_id'] = data['type_id'].replace({12: 100, 14: 100, 25: 100, 28: 100, 38: 100, 32: 200, 39: 300})
-# type_id가 15인 행 제거
+data = data[(data['sigungu_code'] != 99) & (data['mapx'] != 0)]
+data.loc[data['type_id'].isin([12, 14, 25, 28, 38]), 'type_id'] = 100
+data.loc[data['type_id'] == 32, 'type_id'] = 200
+data.loc[data['type_id'] == 39, 'type_id'] = 300
 data = data[data['type_id'] != 15]
 df = data.fillna('')
 
