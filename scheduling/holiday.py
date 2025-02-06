@@ -64,8 +64,8 @@ def save_holidays_to_db(holidays):
     # MySQL 연결
     conn = pymysql.connect(
         host='localhost',
-        user='plan4plan',
-        password='plan1234',
+        user='awsplan4land',
+        password='aws@p4l',
         database='plan_4_land_db',
         charset='utf8mb4'
     )
@@ -73,13 +73,13 @@ def save_holidays_to_db(holidays):
     cursor = conn.cursor()
 
     # 기존 데이터 삭제
-    delete_query = "DELETE FROM Holiday"
+    delete_query = "DELETE FROM holiday"
     cursor.execute(delete_query)
     conn.commit()
 
     # 데이터 삽입 쿼리
     insert_query = """
-    INSERT INTO Holiday (holiday_id, holiday_name, is_holiday, holiday_date, seq, year)
+    INSERT INTO holiday (holiday_id, holiday_name, is_holiday, holiday_date, seq, year)
     VALUES (%s, %s, %s, %s, %s, %s)
     """
 

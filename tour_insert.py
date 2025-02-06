@@ -15,10 +15,10 @@ df = data.fillna('')
 # MySQL 연결
 conn = pymysql.connect(
     host='localhost',
-    user='plan4plan',
-    password='plan1234',
+    user='awsplan4land',
+    password='aws@p4l',
     database='plan_4_land_db',
-    charset='utf8mb4'
+    charset='utf8mb4' # 이모지와 다양한 유니코드 문자를 지원
 )
 
 cursor = conn.cursor()

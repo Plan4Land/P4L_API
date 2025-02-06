@@ -7,7 +7,7 @@ import pymysql
 
 def get_tour():
     today = datetime.now().strftime('%Y%m%d')
-    url = "http://apis.data.go.kr/B551011/KorService1/areaBasedList1"
+    url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1"
     MobileOs = "ETC"
     MobileApp = "Plan4Land"
     dataType = "json"
@@ -86,13 +86,14 @@ if data_raw.shape[0] != 0 :
     data.loc[data['type_id'] == 32, 'type_id'] = 200  ## 숙박 = 200
     data.loc[data['type_id'] == 39, 'type_id'] = 300  ## 음식점 = 300
     data = data[data['type_id'] != 15]  ## 축제공연행사 삭제
+    data['thumbnail'] = data['thumbnail'].str.replace("http://", "https://", regex=False)
     df = data.fillna('')  ## DB 삽입 오류 방지를 위해 null값 처리
 
     # MySQL 연결
     conn = pymysql.connect(
         host='localhost',
-        user='plan4plan',
-        password='plan1234',
+        user='awsplan4land',
+        password='aws@p4l',
         database='plan_4_land_db',
         charset='utf8mb4'  # 이모지와 다양한 유니코드 문자를 지원
     )
